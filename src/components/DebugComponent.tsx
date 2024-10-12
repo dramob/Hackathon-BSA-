@@ -19,6 +19,8 @@ const DebugComponent = () => {
 
   const handleExecuteTransaction = async () => {
     try {
+      console.log(packageId);
+      console.log(moduleId);
       const tx = await suiClient.executeTransactionBlock({
           kind: 'call',
           data: {
