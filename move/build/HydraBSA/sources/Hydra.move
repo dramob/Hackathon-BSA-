@@ -52,8 +52,7 @@ module 0x0::Hydra {
         match (level) {
             1 => 500,    // Niveau 2 à 500 XP
             2 => 1500,   // Niveau 3 à 1500 XP
-            3 => 2000,    // Seuil arbitraire pour les niveaux supérieurs
-            _=> 3500
+            _ => 2000    // Seuil arbitraire pour les niveaux supérieurs
         }
     }
 
