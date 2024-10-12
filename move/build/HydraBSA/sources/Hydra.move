@@ -77,4 +77,11 @@ module 0x0::Hydra {
         object::delete(id);
         // Les autres champs seront détruits automatiquement
     }
+    // Fonction pour dépenser des points de l'avatar (ne peut être appelée que par le propriétaire)
+public fun spend_points(avatar: &mut HydraAvatar, points_to_spend: u64, caller: &address) {
+    assert!(caller == &avatar.owner, 100);  // Vérifie que seul le propriétaire peut dépenser des points
+    assert!(avatar.points >= points_to_spend, 101);  // Vérifie que l'avatar a assez de points
+
+    avatar.points = avatar.points - points_to_spend;  // Déduit les points
+}
 }
