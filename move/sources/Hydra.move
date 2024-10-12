@@ -57,11 +57,11 @@ module 0x0::Hydra {
     // Helper function to get the image URL based on the avatar's level
     public fun get_level_image(level: u8): vector<u8> {
         match level {
-            1 => b"https://example.com/level1.png",  // Image for level 1
-            2 => b"https://example.com/level2.png",  // Image for level 2
+            1 => b"https://ibb.co/PTtS4V9",  // Image for level 1
+            2 => b"",  // Image for level 2
             3 => b"https://example.com/level3.png",  // Image for level 3
             _ => b"https://example.com/default.png"  // Default image for higher levels
-        }
+        
     }
 
     // Function to burn the avatar (can only be called by the owner)
