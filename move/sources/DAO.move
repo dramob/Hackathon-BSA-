@@ -1,6 +1,4 @@
-module 0x1::HydraDAO {
-    use sui::object;
-    use sui::tx_context;
+module 0x0::HydraDAO {
 
     public struct Proposal has key, store {
         id: UID,

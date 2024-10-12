@@ -1,5 +1,5 @@
-module 0x1::Credits {
-    use 0x1::Hydra::{HydraAvatar, get_power, set_power};
+module 0x0::Credits {
+    use 0x0::Hydra::{HydraAvatar, get_power, set_power};
 
     public fun redeem_for_deal(avatar: &mut HydraAvatar, points_to_redeem: u64): bool {
         if (get_power(avatar) >= points_to_redeem) {

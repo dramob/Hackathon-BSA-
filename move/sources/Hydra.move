@@ -1,7 +1,5 @@
-module 0x1::Hydra {
-    use sui::object;
-    use sui::transfer;
-    use sui::tx_context;
+#[allow(lint(custom_state_change))]
+module 0x0::Hydra {
 
     public struct HydraAvatar has key, store {
         id: UID,

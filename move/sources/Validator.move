@@ -1,8 +1,6 @@
-module 0x1::Validator {
-    use 0x1::Hydra::{HydraAvatar, update_hydra};
-    use sui::object;
-    use sui::transfer;
-    use sui::tx_context;
+module 0x0::Validator {
+    use 0x0::Hydra::{HydraAvatar, update_hydra};
+
 
     // Validator structure
     public struct Validator has key, store {
