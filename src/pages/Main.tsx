@@ -9,6 +9,7 @@ import { useCurrentAccount, useSuiClientQuery, useSuiClient } from '@mysten/dapp
 import { Transaction } from '@mysten/sui/transactions';
 import { bcs } from '@mysten/sui/bcs';
 import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
+import { getFaucetHost, requestSuiFromFaucetV0 } from '@mysten/sui/faucet';
 
 
 function ConnectedAccount() {
@@ -230,20 +231,30 @@ const Home = () => {
     
     // Define the Move function call
     transaction.moveCall({
-      target: '${packageId}::${moduleId}::${functionId}',
+      target: `${packageId}::${moduleId}::${functionId}`,
       arguments: [transaction.pure.string(url)], // Pass the URL as an argument
     });
 
-    if (account) {
-    transaction.setSender(account?.address)
+     const signer = ephemeralData?.ephemeralKeyPair.getPublicKey();
+
+    if (signer) {
+    transaction.setSender(signer.toBase64());
+    const res = await requestSuiFromFaucetV0({
+      // connect to Devnet
+      host: getFaucetHost('devnet'),
+      recipient: signer.toSuiPublicKey(),
+    });
     } else {
       console.log("Error getting currentAccount")
     }
 
-    const tx =  await transaction.build({client: client}) // binary
+    transaction.setGasPrice(1);
+    transaction.setGasBudget(10);
+
+    const tx =  await transaction.build({client: client}); // binary
 
     const signature = await ephemeralData?.ephemeralKeyPair.signTransaction(tx);
-    const sign = await ephemeralData?.ephemeralKeyPair.sign(tx);
+    //const sign = await ephemeralData?.ephemeralKeyPair.sign(tx);
     
     if (signature) {
     const result = await client.executeTransactionBlock({
@@ -301,7 +312,7 @@ const Home = () => {
         </section>
 
         <section className="bg-base-100 rounded-lg shadow-md p-8">
-          <h2 className="text-3xl font-bold mb-6 text-center text-blue-600">Connect with Google</h2>
+          <h2 className="text-3xl font-bold mb-6 text-center text-blue-600">Mint an avatar</h2>
           <div className="text-center">
             {isAuthenticated ? (
               <>
