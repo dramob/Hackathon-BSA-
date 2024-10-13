@@ -9,6 +9,7 @@ import Main from './pages/Main';
 import NFT from './pages/NFT';
 import Debug from './pages/Debug';
 import Contract from './pages/Contract';
+import { EnokiFlowProvider } from '@mysten/enoki/react';
 
 function App() {
   const currentAccount = useCurrentAccount();
@@ -24,6 +25,7 @@ function App() {
         <Route path="/NFT" element={<NFT />} />
         <Route path="/Debug" element={<Debug />} />
         <Route path="/Contract" element={<Contract />} />
+        {/* <Route path="/Login" element={<Login />} /> */}
       </Routes>
     </BrowserRouter>
   );
