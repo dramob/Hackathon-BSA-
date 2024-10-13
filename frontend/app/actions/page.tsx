@@ -1,11 +1,13 @@
 'use client';
 
-import { ConnectButton, useCurrentAccount } from "@mysten/dapp-kit";
+import { ConnectButton, useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useUser } from '../../contexts/UserContext';
+import { SuiTransactionBlockResponse } from "@mysten/sui/client";
+import { Transaction } from "@mysten/sui/transactions";
 
 const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false });
 
@@ -20,6 +22,12 @@ export default function Actions() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiConfig, setConfettiConfig] = useState({});
   const { addPoints } = useUser();
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  const [result, setTxResult] = useState<SuiTransactionBlockResponse | null>(null);
+  const packageId = "0x76fd1fcc8139c7678988d4a466ae4a1e84e118ae8f995bbfe5333e005df37681";
+  const moduleId = "Hydra";
+  const functionId = "update_hydra";
+  const objectId = "0x26975450f54c013ec8f6db715b3ed06b518bdc14af01be51e959b1993b70227a";
 
   const popupRef = useRef(null);
 
@@ -31,6 +39,7 @@ export default function Actions() {
 
   useEffect(() => {
     if (showResult) {
+      //@ts-ignore
       const popupRect = popupRef.current?.getBoundingClientRect();
       if (popupRect) {
         setConfettiConfig({
@@ -57,14 +66,48 @@ export default function Actions() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setShowPopup(true);
     setIsLoading(true);
-    // Simulate backend call
-    setTimeout(() => {
+    const transaction = new Transaction();
+    
+    // Define the Move function call
+    transaction.moveCall({
+      target: `${packageId}::${moduleId}::${functionId}`,
+      arguments: [transaction.object(objectId), transaction.pure.u64(300), transaction.pure.u64(300)],
+    });
+
+    const signer = currentAccount?.address;
+
+    if (signer) {
+      transaction.setSender(signer);
+    } else {
+      console.log("Error getting currentAccount");
+    }
+
+    try {
+      const result = await signAndExecuteTransaction(
+        {
+          transaction: transaction,
+          chain: 'sui:devnet',
+        },
+        { 
+          onSuccess: (result) => {
+            console.log('Transaction successful:', result);
+            setShowResult(true);
+          },
+          onError: (error) => {
+            console.error('Transaction failed:', error);
+            // Handle error, e.g., show an error message to the user
+          },
+        },
+      );
+    } catch (error) {
+      console.error('Transaction execution error:', error);
+      // Handle any additional errors
+    } finally {
       setIsLoading(false);
-      setShowResult(true);
-    }, 5000);
+    }
   };
 
   const closePopup = () => {

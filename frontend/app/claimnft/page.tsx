@@ -7,28 +7,45 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Transaction } from '@mysten/sui/transactions';
 import { SuiTransactionBlockResponse } from "@mysten/sui.js/client";
+import { SuiClient } from "@mysten/sui/client";
 
 
 function OwnedObjects({ address }: { address: string }) {
-	const { data } = useSuiClientQuery('getOwnedObjects', {
-		owner: address,
+	const { data } = useSuiClientQuery('getObject', {
+		id: address,
 	});
 	if (!data) {
 		return null;
 	}
 
-	return data;
+	// Assuming data is an object, you can render it as JSON for simplicity
+	return <div>{JSON.stringify(data)}</div>;
 }
+let objectId: any
 
 export default function ClaimNFT() {
   const currentAccount = useCurrentAccount();
   const router = useRouter();
   const [imageError, setImageError] = useState(false);
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  const client = useSuiClient();
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
+		execute: async ({ bytes, signature }) =>
+			await client.executeTransactionBlock({
+				transactionBlock: bytes,
+				signature,
+				options: {
+					// Raw effects are required so the effects can be reported back to the wallet
+					showRawEffects: true,
+					// Select additional data to return
+					showObjectChanges: true,
+				},
+			}),
+	});
   const [result, setTxResult] = useState<SuiTransactionBlockResponse | null>(null);
   const packageId = "0x76fd1fcc8139c7678988d4a466ae4a1e84e118ae8f995bbfe5333e005df37681";
   const moduleId = "Hydra";
   const functionId = "mint_avatar";
+  
 
   useEffect(() => {
     if (!currentAccount) {
@@ -54,14 +71,58 @@ export default function ClaimNFT() {
       console.log("Error getting currentAccount")
     }
 
-    const result = await signAndExecuteTransaction(
+    const result = signAndExecuteTransaction(
       {
         transaction: transaction,
         chain: 'sui:devnet',
       },
       { 
-        onSuccess: (result) => {
+        onSuccess: async (result) => {
           console.log('executed transaction', result);
+          
+            console.log('object changes', result.objectChanges);
+            // Extract object ID from created objects
+            const createdObject = result.objectChanges?.find(change => change.type === 'created');
+            if (createdObject && 'objectId' in createdObject) {
+               objectId = createdObject.objectId;
+              console.log('Minted NFT Object ID:', objectId);
+            } else {
+              console.log('No created object found in transaction result');
+            }
+          //fetch object by id
+          //console.log()
+          const r = await client.getObject({id: objectId})
+          console.log("getobject",r);
+          /*const { data } = useSuiClientQuery('getObject', {
+            id: objectId,
+          });
+          if (data) {
+            console.log("getobject",data);
+          }*/
+
+            //setDigest(result.digest);
+          /*if (signer) {
+          const data = OwnedObjects({address: signer});
+          console.log(data);
+          }*/
+
+          /*try {
+            // Decode the base64 effects string
+            const decodedEffects = atob(result.effects);
+            // Parse the JSON if applicable
+            const effectsJson = JSON.parse(decodedEffects);
+
+            // Attempt to extract the object ID
+            const objectId = effectsJson?.created?.[0]?.reference?.objectId; // Adjust this path based on the actual structure
+            if (objectId) {
+              console.log('Minted NFT Object ID:', objectId);
+            } else {
+              console.log('Object ID not found in transaction result');
+            }
+          } catch (error) {
+            console.error('Failed to decode or parse effects:', error);
+          }*/
+
           router.push('/profile');
         },
         onError: (error) => {
@@ -154,7 +215,12 @@ export default function ClaimNFT() {
             CLAIM
           </button>
         </div>
+
       </div>
+      {/* <div>
+      <h1>Owned Objects</h1>
+      <OwnedObjects address={"0x26975450f54c013ec8f6db715b3ed06b518bdc14af01be51e959b1993b70227a"} />
+    </div> */}
     </div>
   );
 }
