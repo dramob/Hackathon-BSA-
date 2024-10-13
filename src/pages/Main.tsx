@@ -5,12 +5,12 @@ import { JwtPayload, jwtDecode } from "jwt-decode";
 import { generateNonce, jwtToAddress } from '@mysten/zklogin';
 import { getExtendedEphemeralPublicKey, generateRandomness } from '@mysten/zklogin';
 import axios from 'axios';
-import { useCurrentAccount, useSuiClientQuery, useSuiClient } from '@mysten/dapp-kit';
+import { useCurrentAccount, useSuiClientQuery, useSuiClient, useCurrentWallet, useSignAndExecuteTransaction, useSignTransaction } from '@mysten/dapp-kit';
 import { Transaction } from '@mysten/sui/transactions';
 import { bcs } from '@mysten/sui/bcs';
 import { getFullnodeUrl, SuiClient, SuiTransactionBlockResponse } from '@mysten/sui/client';
 import { getFaucetHost, requestSuiFromFaucetV0 } from '@mysten/sui/faucet';
-
+import { SUI_DEVNET_CHAIN, Wallet } from '@mysten/wallet-standard';
 
 function ConnectedAccount() {
 	const account = useCurrentAccount();
@@ -69,6 +69,11 @@ const Home = () => {
   const randomness = generateRandomness();
   const suiClient = useSuiClient();
   const account = useCurrentAccount();
+  const wallet = useCurrentWallet();
+  const signE = useSignAndExecuteTransaction();
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  const { mutateAsync: signTransaction } = useSignTransaction();
+  const [signature2, setSignature] = useState('');
 
   const packageId = "0x76fd1fcc8139c7678988d4a466ae4a1e84e118ae8f995bbfe5333e005df37681";
   const moduleId = "Hydra";
@@ -236,10 +241,10 @@ const Home = () => {
       arguments: [transaction.pure.string(url)], // Pass the URL as an argument
     });
 
-     const signer = ephemeralData?.ephemeralKeyPair.getPublicKey();
+     const signer = account?.address//ephemeralData?.ephemeralKeyPair.getPublicKey();
 
     if (signer) {
-    transaction.setSender(signer.toBase64());
+    transaction.setSender(signer);
     /*const res = await requestSuiFromFaucetV0({
       // connect to Devnet
       host: getFaucetHost('devnet'),
@@ -249,30 +254,51 @@ const Home = () => {
       console.log("Error getting currentAccount")
     }
 
-    transaction.setGasPrice(1);
-    transaction.setGasBudget(10);
+    //transaction.setGasPrice(1);
+    //transaction.setGasBudget(10);
 
-    const tx =  await transaction.build({client: client}); // binary
+    /*const tx =  await transaction.build({client: client}); // binary
+   // const sig = await suiClient.
 
     const signature = await ephemeralData?.ephemeralKeyPair.signTransaction(tx);
-    //const sign = await ephemeralData?.ephemeralKeyPair.sign(tx);
     
-    if (signature) {
-    const result = await client.executeTransactionBlock({
-      transactionBlock: tx,
-      signature: signature.toString(),
-      requestType: 'WaitForLocalExecution',
-      options: {
-        showEffects: true,
-      },
+    
+    const { bytes, reportTransactionEffects } = await signTransaction({
+      transaction: transaction,
+      chain: 'sui:devnet',
     });
+
+    if (signature) {
+      const result = await client.executeTransactionBlock({
+        transactionBlock: bytes,
+        signature: signature2,
+        requestType: 'WaitForLocalExecution',
+        options: {
+          showEffects: true,
+        },
+      });*/
+
+    const t = await signAndExecuteTransaction(
+      {
+        transaction: transaction,
+        chain: 'sui:devnet',
+      },
+      {
+        onSuccess: (result) => {
+          console.log('executed transaction', result);
+          //setDigest(result.digest);
+        },
+      },
+    );
+    
+    
 
     setTxResult(result);
     console.log('Mint Avatar Response:', result);
   }
   
     
-  }
+  
   
   // Example usage
   //mintAvatar('https://ibb.co/PTtS4V9');
@@ -326,11 +352,36 @@ const Home = () => {
                 onClick={() => mintAvatar('https://ibb.co/PTtS4V9g')}
                 className="bg-blue-500 text-white font-bold py-2 px-4 rounded"
               >
-                Connect with Google
+                Mint Avatar
               </button>
             )}
           </div>
         </section>
+
+        <section className="bg-base-100 rounded-lg shadow-md p-8">
+          <h2 className="text-3xl font-bold mb-6 text-center text-blue-600">Mint an avatar</h2>
+          <div className="text-center">
+        <button
+							onClick={() => {
+								signAndExecuteTransaction(
+									{
+										transaction: new Transaction(),
+										chain: 'sui:devnet',
+									},
+									{
+										onSuccess: (result) => {
+											console.log('executed transaction', result);
+											//setDigest(result.digest);
+										},
+									},
+								);
+							}}
+						>
+							Sign and execute transaction
+						</button>
+            </div>
+            </section>
+
       </main>
     </div>
   );
