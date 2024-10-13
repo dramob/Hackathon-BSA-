@@ -8,7 +8,7 @@ import axios from 'axios';
 import { useCurrentAccount, useSuiClientQuery, useSuiClient } from '@mysten/dapp-kit';
 import { Transaction } from '@mysten/sui/transactions';
 import { bcs } from '@mysten/sui/bcs';
-import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
+import { getFullnodeUrl, SuiClient, SuiTransactionBlockResponse } from '@mysten/sui/client';
 import { getFaucetHost, requestSuiFromFaucetV0 } from '@mysten/sui/faucet';
 
 
@@ -64,6 +64,7 @@ const Home = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [idToken, setIdToken] = useState<string | null>(null);
   const [userSalt, setUserSalt] = useState<string | null>(null);
+  const [result, setTxResult] = useState<SuiTransactionBlockResponse | null>(null);
 
   const randomness = generateRandomness();
   const suiClient = useSuiClient();
@@ -73,7 +74,7 @@ const Home = () => {
   const moduleId = "Hydra";
   const functionId = "mint_avatar";
   const args = "";
-  const [result, setResult] = useState(null);
+  //const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
  
   // use getFullnodeUrl to define Devnet RPC location
@@ -239,11 +240,11 @@ const Home = () => {
 
     if (signer) {
     transaction.setSender(signer.toBase64());
-    const res = await requestSuiFromFaucetV0({
+    /*const res = await requestSuiFromFaucetV0({
       // connect to Devnet
       host: getFaucetHost('devnet'),
       recipient: signer.toSuiPublicKey(),
-    });
+    });*/
     } else {
       console.log("Error getting currentAccount")
     }
@@ -265,6 +266,8 @@ const Home = () => {
         showEffects: true,
       },
     });
+
+    setTxResult(result);
     console.log('Mint Avatar Response:', result);
   }
   
@@ -314,7 +317,7 @@ const Home = () => {
         <section className="bg-base-100 rounded-lg shadow-md p-8">
           <h2 className="text-3xl font-bold mb-6 text-center text-blue-600">Mint an avatar</h2>
           <div className="text-center">
-            {isAuthenticated ? (
+            {result ? (
               <>
                 <p className="text-green-500 font-bold">Successfully minted an Avatar!</p>
               </>
