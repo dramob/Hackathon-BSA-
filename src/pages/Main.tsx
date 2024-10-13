@@ -254,9 +254,11 @@ const Home = () => {
       console.log("Error getting currentAccount")
     }
 
-    //transaction.setGasPrice(1);
-    //transaction.setGasBudget(10);
+    transaction.setGasPrice(1);
+    transaction.setGasBudget(100000000000);
 
+    console.log(transaction.gas);
+    console.log(account?.address);
     /*const tx =  await transaction.build({client: client}); // binary
    // const sig = await suiClient.
 
@@ -288,13 +290,17 @@ const Home = () => {
           console.log('executed transaction', result);
           //setDigest(result.digest);
         },
+        onError: (error) => {
+          console.error('Transaction failed:', error);
+          // You can add additional error handling here, such as displaying an error message to the user
+        },
       },
     );
     
     
 
     setTxResult(result);
-    console.log('Mint Avatar Response:', result);
+    //console.log('Mint Avatar Response:', result);
   }
   
     
